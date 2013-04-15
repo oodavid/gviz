@@ -1,3 +1,19 @@
+/**
+ * GViz - Embeddable Graphviz elements
+ *
+ *		Scours the HTML document for <script> tags with a class of "gviz",
+ *		pulls out the content, attempts to load a PNG on the server that
+ *		matches the MD5 hash of the graphviz script, if there is no such
+ *		image it will post said script to the server for rendering.
+ *
+ *		The gviz namespace contains a few 3rd party code snippets:
+ *			Alex Gorbatchev		stripCDATA (taken from his SyntaxHighlighter project)
+ *			Joseph Myers		MD5
+ *
+ *	Author:		David "oodavid" King
+ *	Source:		github.com/oodavid/gviz
+ *	License:	Do whatever
+ */
 $(document).ready(function(){
 	gviz.init();
 });
@@ -11,18 +27,21 @@ gviz.init = function(e){
 		gviz.host	= 'http://' + a.prop('hostname') + '/';
 		// Find and parse all gviz <script>
 		$.each($('script[type="gviz"]'), function(k,v){
-			// Lift out the source, make an MD5 hash and note the width and height
-			var data = {
-				source:	gviz.stripCDATA($(this).text()),
-				hash:	false,
-				layout:	$(this).attr('data-layout')
-			};
-			data.hash = md5(data.source);
-			// Replace with an image - if an error occurs it means that the image hasn't been generated yet...
-			var i = $('<img />').data(data).attr('src', gviz.host + 'img/' + data.hash + '.' + data.layout).one('error', gviz.error);
-			$(this).replaceWith(i);
+			gviz.parse($(this));
 		});
 	}
+};
+gviz.parse = function(el){
+	// Lift out the source, make an MD5 hash and note the width and height
+	var data = {
+		source:	gviz.stripCDATA(el.text()),
+		hash:	false,
+		layout:	el.attr('data-layout')
+	};
+	data.hash = md5(data.source);
+	// Replace with an image - if an error occurs it means that the image hasn't been generated yet...
+	var i = $('<img />').data(data).attr('src', gviz.host + 'img/' + data.hash + '.' + data.layout).one('error', gviz.error);
+	el.replaceWith(i);
 };
 gviz.error = function(e){
 	// Context buster
@@ -46,9 +65,9 @@ gviz.error = function(e){
 	});
 };
 /**
- * stripCDATA - removes encapsulating <![CDATA[]]> from <script> content
+ * Alex Gorbatchev - stripCDATA (taken from his SyntaxHighlighter project)
  *
- * Taken from alexgorbatchev's SyntaxHighlighter
+ *		removes encapsulating <![CDATA[]]> from <script> content
  */
 gviz.stripCDATA = function(original){
 	var left		= '<![CDATA[';
@@ -72,9 +91,7 @@ gviz.trim = function(str){
 	return str.replace(/^\s+|\s+$/g, '');
 };
 /**
- * MD5 - calculates an MD5 hash of a string
- *
- * By Joseph Myers: http://www.myersdaily.org/joseph/javascript/md5.js
+ * Joseph Myers - MD5
  */
 function md5cycle(x, k) {
 var a = x[0], b = x[1], c = x[2], d = x[3];
