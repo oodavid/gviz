@@ -1,3 +1,4 @@
-##### Ignore the contents of this folder, but do track this file
+##### Ignore the contents of this folder, but do track this file and the htaccess
 *
 !.gitignore
+!.htaccess
